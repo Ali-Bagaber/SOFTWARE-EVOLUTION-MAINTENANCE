@@ -131,6 +131,8 @@ Route::prefix('agency')->group(function () {
 
         // Inquiry detail routes for agencies
         Route::get('/inquiry/{id}', [InquiryController::class, 'show'])->name('agency.inquiry.show');
+        Route::get('/inquiry/view/{id}', [AgencyReviewAndNotificationController::class, 'showInquiryDetail'])
+            ->name('agency.inquiry.view');
 
         // Agency Inquiry List with Advanced Filtering
         Route::get('/inquiry-list', [InquiryController::class, 'showAgencyInquiryList'])

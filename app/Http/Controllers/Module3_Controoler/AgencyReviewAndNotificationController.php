@@ -142,7 +142,7 @@ class AgencyReviewAndNotificationController extends Controller
         $inProgress = (clone $baseQuery)->where('status', 'In Progress')->count();
         $resolved = (clone $baseQuery)->where('status', 'Resolved')->count();
         $rejected = (clone $baseQuery)->where('status', 'Rejected')->count();
-        $assigned = (clone $baseQuery)->whereHas('verificationProcesses', function($query) use ($agency) {
+        $assigned = (clone $baseQuery)->whereHas('verificationProcesses', function ($query) use ($agency) {
             if ($agency) {
                 $query->where('staff_agency_id', $agency->agency_id);
             }
@@ -171,7 +171,7 @@ class AgencyReviewAndNotificationController extends Controller
      * Show individual inquiry details for agency review
      *
      * @param int $inquiryId
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
      */
     public function showInquiryDetail($inquiryId)
     {
@@ -195,10 +195,14 @@ class AgencyReviewAndNotificationController extends Controller
                     ->where('staff_agency_id', $agency->agency_id)
                     ->exists();
                 if (!$hasAccess) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'You do not have permission to view this inquiry.'
-                    ], 403);
+                    // Check if it's an AJAX request
+                    if (request()->wantsJson() || request()->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'You do not have permission to view this inquiry.'
+                        ], 403);
+                    }
+                    return redirect()->back()->with('error', 'You do not have permission to view this inquiry.');
                 }
                 // Get the latest verification_processes record for this agency/inquiry
                 $verificationProcess = VerificationProcess::where('inquiry_id', $inquiryId)
@@ -207,16 +211,25 @@ class AgencyReviewAndNotificationController extends Controller
                     ->first();
             }
 
-            return response()->json([
-                'success' => true,
-                'inquiry' => $inquiry->load('user'),
-                'verification_process' => $verificationProcess
-            ]);
+            // Check if it's an AJAX request
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'inquiry' => $inquiry->load('user'),
+                    'verification_process' => $verificationProcess
+                ]);
+            }
+
+            // Return view for browser requests
+            return view('Module3.AgencyStaff.ViewInquiryDetail', compact('inquiry', 'verificationProcess', 'agency'));
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Inquiry not found.'
-            ], 404);
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Inquiry not found.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Inquiry not found.');
         }
     }
 
@@ -267,7 +280,7 @@ class AgencyReviewAndNotificationController extends Controller
                 $hasAccess = VerificationProcess::where('inquiry_id', $inquiry->inquiry_id)
                     ->where('staff_agency_id', $agency->agency_id)
                     ->exists();
-                
+
                 if (!$hasAccess) {
                     return response()->json([
                         'success' => false,
@@ -308,13 +321,13 @@ class AgencyReviewAndNotificationController extends Controller
 
             // Send notification for important status changes
             if (in_array($normalizedStatus, ['Verified as True', 'Identified as Fake', 'Rejected'])) {
-                $notificationMessage = match($normalizedStatus) {
+                $notificationMessage = match ($normalizedStatus) {
                     'Verified as True' => "Good news! Your inquiry '{$inquiry->title}' has been verified as TRUE. The information has been confirmed as genuine and accurate.",
                     'Identified as Fake' => "Your inquiry '{$inquiry->title}' has been investigated and IDENTIFIED AS FAKE NEWS. The information has been determined to be false or misleading.",
                     'Rejected' => "Your inquiry '{$inquiry->title}' has been REJECTED after investigation.",
                     default => "Your inquiry '{$inquiry->title}' status has been updated to: {$normalizedStatus}"
                 };
-                
+
                 \App\Models\Module4\Notification::createNotification(
                     $inquiry->public_user_id,
                     $inquiry->inquiry_id,
@@ -615,7 +628,7 @@ class AgencyReviewAndNotificationController extends Controller
             } else {
                 $notificationMessage = "Your inquiry '{$inquiry->title}' has been REJECTED after investigation. Reason: {$request->rejection_reason}";
             }
-            
+
             \App\Models\Module4\Notification::createNotification(
                 $inquiry->public_user_id,
                 $inquiry->inquiry_id,
@@ -701,12 +714,12 @@ class AgencyReviewAndNotificationController extends Controller
         try {
             // Get MCMC_ID from verification_processes table based on inquiry_id
             $verificationProcess = VerificationProcess::where('inquiry_id', $request->inquiry_id)->first();
-            
+
             if (!$verificationProcess || !$verificationProcess->MCMC_ID) {
                 Log::error('No MCMC_ID found for inquiry_id: ' . $request->inquiry_id);
                 return response()->json(['success' => false, 'error' => 'MCMC not found for this inquiry'], 404);
             }
-            
+
             $mcmcId = $verificationProcess->MCMC_ID;
             Log::debug('Found MCMC_ID:', ['mcmc_id' => $mcmcId, 'inquiry_id' => $request->inquiry_id]);
 
@@ -730,7 +743,6 @@ class AgencyReviewAndNotificationController extends Controller
                 'message' => 'Notification sent successfully!',
                 'notification_id' => $notification->notification_id
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error creating notification:', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'error' => 'Failed to send notification'], 500);

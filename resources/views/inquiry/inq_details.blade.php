@@ -617,27 +617,6 @@
                         </a>
                     </div>
                 </div>
-                @elseif($userRole === 'agency')
-                <div class="card">
-                    <h2>
-                        <i class="fas fa-cogs"></i>
-                        Agency Actions
-                    </h2>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary">
-                            <i class="fas fa-play"></i>
-                            Start Working
-                        </button>
-                        <button class="btn btn-success">
-                            <i class="fas fa-check"></i>
-                            Mark Resolved
-                        </button>
-                        <button class="btn btn-warning">
-                            <i class="fas fa-comment"></i>
-                            Add Update
-                        </button>
-                    </div>
-                </div>
                 @endif
             </div>
 
