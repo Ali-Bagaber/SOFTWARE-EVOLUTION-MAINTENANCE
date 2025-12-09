@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>    <meta charset="UTF-8">
+
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $userRole === 'admin' ? 'Admin - ' : '' }}Inquiry Details - {{ $inquiry->title }} - Inquira</title>
@@ -18,9 +20,17 @@
             background: #f8fafc;
             color: #334155;
             line-height: 1.6;
-        }        /* Header */
+        }
+
+        /* Header */
         .header {
-            background: {{ $userRole === 'admin' ? 'linear-gradient(135deg, #2c3e50, #34495e)' : 'linear-gradient(135deg, #1e293b, #0f172a)' }};
+            background: {
+                    {
+                    $userRole ==='admin' ? 'linear-gradient(135deg, #2c3e50, #34495e)': 'linear-gradient(135deg, #1e293b, #0f172a)'
+                }
+            }
+
+            ;
             color: white;
             padding: 2rem 0;
             text-align: center;
@@ -110,13 +120,40 @@
             margin-bottom: 1rem;
         }
 
-        .status-pending { background: #fef3c7; color: #d97706; }
-        .status-under-review { background: #dbeafe; color: #2563eb; }
-        .status-assigned { background: #e0e7ff; color: #4f46e5; }
-        .status-in-progress { background: #dbeafe; color: #0ea5e9; }
-        .status-resolved { background: #d1fae5; color: #059669; }
-        .status-closed { background: #f1f5f9; color: #64748b; }
-        .status-rejected { background: #fee2e2; color: #dc2626; }
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-under-review {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-assigned {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .status-in-progress {
+            background: #dbeafe;
+            color: #0ea5e9;
+        }
+
+        .status-resolved {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-closed {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
 
         /* Info Grid */
         .info-grid {
@@ -257,7 +294,9 @@
         }
 
         /* Role-based visibility */
-        .admin-only, .agency-only, .owner-only {
+        .admin-only,
+        .agency-only,
+        .owner-only {
             display: none;
         }
 
@@ -342,7 +381,9 @@
         .btn-danger {
             background: #dc2626;
             color: white;
-        }        .btn-danger:hover {
+        }
+
+        .btn-danger:hover {
             background: #b91c1c;
         }
 
@@ -396,7 +437,9 @@
         .btn-discard-admin {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
-        }        .btn-discard-admin:hover {
+        }
+
+        .btn-discard-admin:hover {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
         }
 
@@ -450,15 +493,16 @@
         }
     </style>
 </head>
+
 <body class="role-{{ $userRole }}">
     <div class="header">
         <h1>
             @if($userRole === 'admin')
-                <i class="fas fa-shield-alt"></i>
-                Admin Inquiry Details
-                <span class="admin-badge">Admin View</span>
+            <i class="fas fa-shield-alt"></i>
+            Admin Inquiry Details
+            <span class="admin-badge">Admin View</span>
             @else
-                Inquiry Details
+            Inquiry Details
             @endif
         </h1>
         <p>{{ $inquiry->title }}</p>
@@ -483,15 +527,15 @@
                     <div class="status-badge status-{{ strtolower(str_replace(' ', '-', $inquiry->status)) }}">
                         <i class="fas fa-circle"></i>
                         {{ $inquiry->status_label }}
-                    </div>                    <!-- Basic Information Grid -->
+                    </div> <!-- Basic Information Grid -->
                     <div class="info-grid">
                         <div class="info-item">
                             <div class="info-label">Inquiry ID</div>
                             <div class="info-value">
                                 @if($userRole === 'admin')
-                                    #INQ{{ str_pad($inquiry->inquiry_id, 3, '0', STR_PAD_LEFT) }}
+                                #INQ{{ str_pad($inquiry->inquiry_id, 3, '0', STR_PAD_LEFT) }}
                                 @else
-                                    #{{ $inquiry->inquiry_id }}
+                                #{{ $inquiry->inquiry_id }}
                                 @endif
                             </div>
                         </div>
@@ -503,9 +547,9 @@
                             <div class="info-label">Date Submitted</div>
                             <div class="info-value">
                                 @if($userRole === 'admin')
-                                    {{ $inquiry->date_submitted->format('F j, Y \a\t g:i A') }}
+                                {{ $inquiry->date_submitted->format('F j, Y \a\t g:i A') }}
                                 @else
-                                    {{ $inquiry->date_submitted->format('M d, Y') }}
+                                {{ $inquiry->date_submitted->format('M d, Y') }}
                                 @endif
                             </div>
                         </div>
@@ -513,13 +557,13 @@
                             <div class="info-label">Last Updated</div>
                             <div class="info-value">
                                 @if($userRole === 'admin')
-                                    {{ $inquiry->updated_at->format('F j, Y \a\t g:i A') }}
+                                {{ $inquiry->updated_at->format('F j, Y \a\t g:i A') }}
                                 @else
-                                    {{ $inquiry->updated_at->format('M d, Y H:i') }}
+                                {{ $inquiry->updated_at->format('M d, Y H:i') }}
                                 @endif
                             </div>
                         </div>
-                    </div>                    <!-- Submitter Information (Enhanced for Admin) -->
+                    </div> <!-- Submitter Information (Enhanced for Admin) -->
                     @if($userRole === 'admin')
                     <div class="content-section admin-section">
                         <h4>
@@ -527,26 +571,26 @@
                             Submitter Information (Admin View)
                         </h4>
                         @if($inquiry->user)
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <div class="info-label">Full Name</div>
-                                    <div class="info-value">{{ $inquiry->user->name ?? 'Unknown User' }}</div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">Email Address</div>
-                                    <div class="info-value">{{ $inquiry->user->email ?? 'N/A' }}</div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">Contact Number</div>
-                                    <div class="info-value">{{ $inquiry->contact_number ?? 'Not provided' }}</div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">User Role</div>
-                                    <div class="info-value">{{ ucfirst($inquiry->user->user_role ?? 'Unknown') }}</div>
-                                </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Full Name</div>
+                                <div class="info-value">{{ $inquiry->user->name ?? 'Unknown User' }}</div>
                             </div>
+                            <div class="info-item">
+                                <div class="info-label">Email Address</div>
+                                <div class="info-value">{{ $inquiry->user->email ?? 'N/A' }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Contact Number</div>
+                                <div class="info-value">{{ $inquiry->contact_number ?? 'Not provided' }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">User Role</div>
+                                <div class="info-value">{{ ucfirst($inquiry->user->user_role ?? 'Unknown') }}</div>
+                            </div>
+                        </div>
                         @else
-                            <p style="color: #dc2626; font-weight: 500;">⚠️ User information not available - Account may have been deleted</p>
+                        <p style="color: #dc2626; font-weight: 500;">⚠️ User information not available - Account may have been deleted</p>
                         @endif
                     </div>
                     @elseif($userRole === 'agency' || $userRole === 'owner')
@@ -556,10 +600,10 @@
                             Submitted By
                         </h4>
                         @if($inquiry->user)
-                            <p><strong>Name:</strong> {{ $inquiry->user->name ?? 'N/A' }}</p>
-                            <p><strong>Email:</strong> {{ $inquiry->user->email ?? 'N/A' }}</p>
+                        <p><strong>Name:</strong> {{ $inquiry->user->name ?? 'N/A' }}</p>
+                        <p><strong>Email:</strong> {{ $inquiry->user->email ?? 'N/A' }}</p>
                         @else
-                            <p>User information not available</p>
+                        <p>User information not available</p>
                         @endif
                     </div>
                     @else
@@ -585,7 +629,7 @@
                             <i class="fas fa-paperclip"></i>
                             Attachments & Evidence
                         </h4>
-                        <div class="attachments">                            @if($inquiry->media_attachment)
+                        <div class="attachments"> @if($inquiry->media_attachment)
                             <a href="{{ asset('storage/' . $inquiry->media_attachment) }}" target="_blank" class="attachment-item">
                                 <i class="fas fa-file"></i>
                                 {{ basename($inquiry->media_attachment) }}
@@ -600,13 +644,14 @@
                         </div>
                     </div>
                     @endif
-                </div>                <!-- Admin/Agency Actions -->
+                </div> <!-- Admin/Agency Actions -->
                 @if($userRole === 'admin')
                 <div class="card admin-actions-card">
                     <h2>
                         <i class="fas fa-cogs"></i>
                         Admin Actions & Controls
-                    </h2>                    <div class="action-buttons">
+                    </h2>
+                    <div class="action-buttons">
                         <button class="admin-action-btn btn-discard-admin" onclick="discardAsNonSerious({{ $inquiry->inquiry_id }})">
                             <i class="fas fa-trash-alt"></i>
                             Discard as Non-Serious
@@ -622,7 +667,7 @@
 
             <!-- Sidebar -->
             <div class="sidebar-content">
-             @include('module_4.user_public.inquiry_history', ['inquiry' => $inquiry, 'userRole' => $userRole])
+                @include('module_4.user_public.inquiry_history', ['inquiry' => $inquiry, 'userRole' => $userRole])
 
                 <!-- Quick Stats (Admin/Agency only) -->
                 <div class="admin-only agency-only">
@@ -643,46 +688,49 @@
                             <div class="info-label">Priority</div>
                             <div class="info-value">
                                 @if($inquiry->date_submitted->diffInDays(now()) > 30)
-                                    <span style="color: #dc2626;">High</span>
+                                <span style="color: #dc2626;">High</span>
                                 @elseif($inquiry->date_submitted->diffInDays(now()) > 14)
-                                    <span style="color: #d97706;">Medium</span>
+                                <span style="color: #d97706;">Medium</span>
                                 @else
-                                    <span style="color: #059669;">Normal</span>
+                                <span style="color: #059669;">Normal</span>
                                 @endif
                             </div>
                         </div>
                     </div>
-                </div>            </div>
+                </div>
+            </div>
         </div>
-    </div>    @if($userRole === 'admin')
+    </div> @if($userRole === 'admin')
     <script>
         // Discard as non-serious function
         function discardAsNonSerious(inquiryId) {
             if (confirm('Are you sure you want to discard this inquiry as non-serious? This will mark it as closed.')) {
                 fetch(`/admin/inquiries/${inquiryId}/discard-non-serious`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Inquiry has been discarded as non-serious.');
-                        window.location.href = '{{ route('admin.inquiries') }}';
-                    } else {
-                        alert('Error: ' + (data.message || 'Failed to discard inquiry'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while processing the request.');
-                });
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Inquiry has been discarded as non-serious.');
+                            window.location.href = '{{ route('
+                            admin.inquiries ') }}';
+                        } else {
+                            alert('Error: ' + (data.message || 'Failed to discard inquiry'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while processing the request.');
+                    });
             }
         }
     </script>
     @endif
 </body>
+
 </html>
