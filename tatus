@@ -1,0 +1,89 @@
+[1mdiff --cc resources/views/inquiry/User/user_create_inq.blade.php[m
+[1mindex 82950d2,ae715f0..0000000[m
+[1m--- a/resources/views/inquiry/User/user_create_inq.blade.php[m
+[1m+++ b/resources/views/inquiry/User/user_create_inq.blade.php[m
+[36m@@@ -276,14 -438,76 +276,67 @@@[m
+              }[m
+          }[m
+      </style>[m
+[32m++<<<<<<< HEAD[m
+[32m +@endsection[m
+[32m++=======[m
+[32m+ </head>[m
+[32m+ <body>[m
+[32m+     <!-- Sidebar -->[m
+[32m+     <aside class="sidebar">[m
+[32m+         <div class="logo">[m
+[32m+             <h1>Inquira</h1>[m
+[32m+         </div>[m
+[32m+           <nav>[m
+[32m+             <ul class="nav-menu">[m
+[32m+                 <li class="nav-item">[m
+[32m+                     <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">[m
+[32m+                         <i class="fas fa-home"></i>[m
+[32m+                         Home[m
+[32m+                     </a>[m
+[32m+                 </li>[m
+[32m+                 <li class="nav-item">[m
+[32m+                     <a href="{{ route('inquiry.dashboard') }}" class="nav-link {{ request()->routeIs('inquiry.dashboard') ? 'active' : '' }}">[m
+[32m+                         <i class="fas fa-list"></i>[m
+[32m+                         My Inquiries[m
+[32m+                     </a>[m
+[32m+                 </li>                <li class="nav-item">[m
+[32m+                     <a href="{{ route('inquiry.create') }}" class="nav-link {{ request()->routeIs('inquiry.create') ? 'active' : '' }}">[m
+[32m+                         <i class="fas fa-edit"></i>[m
+[32m+                         Submit Inquiry[m
+[32m+                     </a>[m
+[32m+                 </li>[m
+[32m+                 <li class="nav-item">[m
+[32m+                     <a href="{{ route('inquiry.browse') }}" class="nav-link {{ request()->routeIs('inquiry.browse') ? 'active' : '' }}">[m
+[32m+                         <i class="fas fa-search"></i>[m
+[32m+                         Browse Inquiries[m
+[32m+                     </a>[m
+[32m+                 </li>[m
+[32m+                 <li class="nav-item">[m
+[32m+                     <a href="{{ route('publicuser.profile') }}" class="nav-link {{ request()->routeIs('publicuser.profile') ? 'active' : '' }}">[m
+[32m+                         <i class="fas fa-user"></i>[m
+[32m+                         Profile Menu[m
+[32m+                     </a>[m
+[32m+                 </li>[m
+[32m+                 <li class="nav-item">[m
+[32m+                     <form method="POST" action="{{ route('logout') }}">[m
+[32m+                         @csrf[m
+[32m+                         <button type="submit" class="nav-link">[m
+[32m+                             <i class="fas fa-sign-out-alt"></i>[m
+[32m+                             Logout[m
+[32m+                         </button>[m
+[32m+                     </form>[m
+[32m+                 </li>[m
+[32m+             </ul>[m
+[32m+         </nav>[m
+[32m+     </aside>[m
+[32m++>>>>>>> 8d6c74d749344c05372733882b02ca4206ce8c80[m
+  [m
+[32m +@section('page_title', 'Submit Inquiry')[m
+[32m +[m
+[32m +@section('content')[m
+      <!-- Main Content -->[m
+      <main class="main-content">[m
+[31m -        <!-- Header -->[m
+[31m -        <header class="header">[m
+[31m -            <h2>Submit New Inquiry</h2>[m
+[31m -            <div class="user-profile">[m
+[31m -                <div class="user-avatar">[m
+[31m -                    @if(Auth::user()->profile_picture && file_exists(public_path('storage/' . Auth::user()->profile_picture)))[m
+[31m -                        <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">[m
+[31m -                    @else[m
+[31m -                        {{ collect(explode(' ', Auth::user()->name))->map(fn($n) => strtoupper(substr($n,0,1)))->join('') }}[m
+[31m -                    @endif[m
+[31m -                </div>[m
+[31m -                <div class="user-info">[m
+[31m -                    <h4>{{ Auth::user()->name }}</h4>[m
+[31m -                    <p>{{ ucfirst(Auth::user()->user_role) }}</p>[m
+[31m -                </div>[m
+[31m -            </div>[m
+[31m -        </header>[m
+[32m +        [m
+  [m
+          <!-- Form Section -->[m
+          <section class="form-section">[m
