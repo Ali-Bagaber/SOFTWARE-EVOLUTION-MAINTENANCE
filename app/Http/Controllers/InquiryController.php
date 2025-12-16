@@ -123,14 +123,8 @@ class InquiryController extends Controller
             $searchTerm = $request->input('search');
             $query->where(function($q) use ($searchTerm) {
                 $q->where('title', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('content', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('category', 'LIKE', "%{$searchTerm}%");
+                  ->orWhere('content', 'LIKE', "%{$searchTerm}%");
             });
-        }
-        
-        // Category filter
-        if ($request->filled('category') && $request->input('category') !== 'all') {
-            $query->where('category', $request->input('category'));
         }
         
         // Status filter
@@ -153,14 +147,7 @@ class InquiryController extends Controller
         // Paginate results
         $inquiries = $query->paginate(10)->withQueryString();
         
-        // Get unique categories for filter dropdown
-        $categories = Inquiry::whereNotNull('category')
-                            ->distinct()
-                            ->pluck('category')
-                            ->filter()
-                            ->sort();
-        
-        return view('inquiry.User.user_public_inq', compact('inquiries', 'categories'));
+        return view('inquiry.User.user_public_inq', compact('inquiries'));
     }
 
     /**

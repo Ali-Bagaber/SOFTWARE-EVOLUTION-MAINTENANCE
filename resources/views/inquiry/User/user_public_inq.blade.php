@@ -27,7 +27,7 @@
 
         .search-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr;
             gap: 20px;
             align-items: end;
         }
@@ -483,22 +483,10 @@
                         <input type="text" 
                                id="search" 
                                name="search" 
-                               placeholder="Search by title, content, or category..." 
+                               placeholder="Search by title or content..." 
                                value="{{ request('search') }}"
                                class="search-input">
                     </div>
-                </div>
-                
-                <div class="filter-field">
-                    <label for="category">Category</label>
-                    <select name="category" id="category" class="filter-select">
-                        <option value="all">All Categories</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
-                                {{ ucfirst($category) }}
-                            </option>
-                        @endforeach
-                    </select>
                 </div>
                 
                 <div class="filter-field">
