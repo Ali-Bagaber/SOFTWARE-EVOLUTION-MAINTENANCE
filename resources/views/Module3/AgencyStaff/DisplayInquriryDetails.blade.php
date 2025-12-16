@@ -383,72 +383,7 @@
 
         <!-- Main Content Section -->
         <div class="content-section">
-            <!-- Search and Filter Section -->
-            <div class="search-filter-section">
-                <form method="GET" action="{{ route('agency.inquiry.list') }}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label"><i class="fas fa-search"></i> Search</label>
-                            <input type="text" class="form-control" name="search"
-                                value="{{ $search ?? '' }}"
-                                placeholder="Search by ID, title, or description...">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label"><i class="fas fa-tag"></i> Status</label>
-                            <select class="form-select" name="status">
-                                <option value="">All Statuses</option>
-                                @if(isset($statuses))
-                                @foreach($statuses as $statusOption)
-                                <option value="{{ $statusOption }}"
-                                    {{ (isset($status) && $status == $statusOption) ? 'selected' : '' }}>
-                                    {{ $statusOption }}
-                                </option>
-                                @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label"><i class="fas fa-folder"></i> Category</label>
-                            <select class="form-select" name="category">
-                                <option value="">All Categories</option>
-                                @if(isset($categories))
-                                @foreach($categories as $cat)
-                                <option value="{{ $cat }}"
-                                    {{ (isset($category) && $category == $cat) ? 'selected' : '' }}>
-                                    {{ $cat }}
-                                </option>
-                                @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label"><i class="fas fa-calendar"></i> From Date</label>
-                            <input type="date" class="form-control" name="date_from"
-                                value="{{ $dateFrom ?? '' }}">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label"><i class="fas fa-calendar"></i> To Date</label>
-                            <input type="date" class="form-control" name="date_to"
-                                value="{{ $dateTo ?? '' }}">
-                        </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <button type="submit" class="btn btn-filter w-100">
-                                <i class="fas fa-filter"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-12 d-flex gap-2">
-                            <a href="{{ route('agency.inquiry.list') }}" class="btn btn-reset">
-                                <i class="fas fa-undo"></i> Reset Filters
-                            </a>
-                            <button type="submit" name="export" value="csv" class="btn btn-export">
-                                <i class="fas fa-download"></i> Export to CSV
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+            
 
             <!-- Inquiries Table -->
             @if(isset($inquiries) && $inquiries->count() > 0)
@@ -488,11 +423,13 @@
                                             <i class="fas fa-eye"></i> View
                                         </a>
                                         @if(in_array($inquiry->status, ['Pending', 'Under Investigation']))
-                                        <a href="{{ route('agency.inquiry.accept', $inquiry->inquiry_id) }}"
-                                            class="btn btn-sm btn-accept">
-                                            <i class="fas fa-check"></i> Accept
-                                        </a>
-                                        <a href="{{ route('agency.inquiry.reject', $inquiry->inquiry_id) }}"
+                                        <form action="{{ route('agency.inquiry.accept', $inquiry->inquiry_id) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-accept" onclick="return confirm('Are you sure you want to accept this inquiry?')">
+                                                <i class="fas fa-check"></i> Accept
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('agency.inquiry.reject.comments', $inquiry->inquiry_id) }}"
                                             class="btn btn-sm btn-reject">
                                             <i class="fas fa-times"></i> Reject
                                         </a>

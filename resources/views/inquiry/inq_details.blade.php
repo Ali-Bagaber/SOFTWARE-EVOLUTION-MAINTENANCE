@@ -717,8 +717,7 @@
                     .then(data => {
                         if (data.success) {
                             alert('Inquiry has been discarded as non-serious.');
-                            window.location.href = '{{ route('
-                            admin.inquiries ') }}';
+                            window.location.href = '{{ route("admin.inquiries") }}';
                         } else {
                             alert('Error: ' + (data.message || 'Failed to discard inquiry'));
                         }

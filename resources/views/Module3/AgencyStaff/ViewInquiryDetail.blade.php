@@ -360,11 +360,13 @@
             <!-- Action Buttons -->
             @if(in_array($inquiry->status, ['Pending', 'Under Investigation']))
             <div class="action-buttons">
-                <a href="{{ route('agency.inquiry.accept', $inquiry->inquiry_id) }}"
-                    class="btn btn-action btn-accept"
-                    onclick="return confirm('Are you sure you want to accept this inquiry?')">
-                    <i class="fas fa-check-circle"></i> Accept Inquiry
-                </a>
+                <form action="{{ route('agency.inquiry.accept', $inquiry->inquiry_id) }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-action btn-accept"
+                        onclick="return confirm('Are you sure you want to accept this inquiry?')">
+                        <i class="fas fa-check-circle"></i> Accept Inquiry
+                    </button>
+                </form>
                 <a href="{{ route('agency.inquiry.reject.comments', $inquiry->inquiry_id) }}"
                     class="btn btn-action btn-reject">
                     <i class="fas fa-times-circle"></i> Reject Inquiry
