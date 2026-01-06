@@ -28,6 +28,8 @@ class NotificationController extends Controller
         // Determine which view to use based on the route
         if ($routeName === 'admin.notifications') {
             $viewName = 'module_4.MCMC_Admin.notification_list';
+        } elseif ($routeName === 'agency.notifications') {
+            $viewName = 'module_4.agency.notification_list';
         } else {
             $viewName = 'module_4.user_public.notification_list';
         }

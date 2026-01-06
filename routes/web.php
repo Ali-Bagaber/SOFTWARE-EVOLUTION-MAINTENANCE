@@ -170,6 +170,9 @@ Route::prefix('agency')->group(function () {
         Route::post('/notify-mcmc', [AgencyReviewAndNotificationController::class, 'notifyMCMC'])
             ->name('agency.notify.mcmc');
 
+        // Notification routes for agency
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('agency.notifications');
+
         // Alternative route for home page
         Route::get('/home', function () {
             return redirect()->route('agency.dashboard');
@@ -222,6 +225,9 @@ Route::middleware('auth')->group(function () {
     // Admin inquiry action routes
     Route::post('/admin/inquiries/{inquiryId}/discard-non-serious', [AdminController::class, 'discardAsNonSerious'])->name('admin.inquiry.discard');
     Route::get('/admin/inquiries/{inquiryId}/details', [AdminController::class, 'showInquiryDetails'])->name('admin.inquiry.details');
+    
+    // Admin send reminder to agency
+    Route::post('/admin/inquiries/{inquiryId}/send-reminder', [AdminController::class, 'sendInquiryReminder'])->name('admin.inquiry.send-reminder');
 
     // Admin inquiry reports routes
     Route::get('/admin/inquiry-reports', [AdminController::class, 'showInquiryReports'])->name('admin.inquiry.reports');

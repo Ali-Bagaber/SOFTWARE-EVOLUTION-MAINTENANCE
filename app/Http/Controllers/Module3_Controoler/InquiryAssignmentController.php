@@ -324,12 +324,29 @@ class InquiryAssignmentController extends Controller
 
             // Notify the public user about the assignment
             $agencyName = $agency ? $agency->agency_name : ('Agency ID ' . $request->agency_id);
-            $notificationMessage = "Your inquiry '{$inquiry->title}' has been assigned to the agency: {$agencyName} for review.";
+            $adminName = $user->name ?? 'Administrator';
+            $notificationMessage = "📋 {$adminName} has assigned your inquiry '{$inquiry->title}' to {$agencyName} for review.";
             \App\Models\Module4\Notification::createNotification(
                 $inquiry->public_user_id,
                 $inquiry->inquiry_id,
                 $notificationMessage
             );
+
+            // Notify the agency staff about the new assignment
+            if ($agency) {
+                $agencyUsers = \App\Models\User::where('agency_id', $request->agency_id)
+                    ->where('user_role', 'agency')
+                    ->get();
+                
+                foreach ($agencyUsers as $agencyUser) {
+                    $agencyNotificationMessage = "🔔 {$adminName} assigned new inquiry '{$inquiry->title}' to your agency for investigation. Priority: {$request->priority}.";
+                    \App\Models\Module4\Notification::createNotification(
+                        $agencyUser->user_id,
+                        $inquiry->inquiry_id,
+                        $agencyNotificationMessage
+                    );
+                }
+            }
 
             return redirect()->route('admin.inquiries')
                 ->with('success', "Inquiry #{$inquiry->inquiry_id} successfully assigned to {$agencyName}!");

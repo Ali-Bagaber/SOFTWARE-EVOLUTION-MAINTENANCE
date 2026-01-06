@@ -497,10 +497,11 @@ class AdminController extends Controller
             ]);
 
             // Create notification for status change
+            $adminName = Auth::user()->name ?? 'Administrator';
             Notification::createNotification(
                 $inquiry->public_user_id,
                 $inquiry->inquiry_id,
-                "Your inquiry has been marked as non-serious and rejected."
+                "❌ {$adminName} has marked your inquiry as non-serious and rejected it."
             );
 
             return response()->json([
@@ -690,7 +691,7 @@ class AdminController extends Controller
     public function showAllInquiries(Request $request)
     {
         // Build base query - exclude pending and under review inquiries
-        $query = Inquiry::with('user')
+        $query = Inquiry::with(['user', 'verificationProcesses'])
             ->whereNotIn('status', ['Pending', 'Under Review']);
 
         // Apply search filter
@@ -793,5 +794,92 @@ class AdminController extends Controller
         return response($csv)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
+
+    /**
+     * Send reminder notification to agency for inactive inquiry
+     *
+     * @param int $inquiryId
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sendInquiryReminder(Request $request, $inquiryId)
+    {
+        try {
+            $inquiry = Inquiry::with('verificationProcesses')->findOrFail($inquiryId);
+
+            // Check if inquiry is assigned to an agency
+            $verificationProcess = $inquiry->verificationProcesses()->first();
+            
+            if (!$verificationProcess) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This inquiry is not assigned to any agency.'
+                ], 400);
+            }
+
+            $agencyId = $verificationProcess->staff_agency_id;
+            
+            // Get agency details
+            $agency = \App\Models\Agency::find($agencyId);
+            if (!$agency) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Agency not found.'
+                ], 404);
+            }
+
+            // Get custom message or use default
+            $adminName = Auth::user()->name ?? 'Administrator';
+            $customMessage = $request->input('message', '');
+            $defaultMessage = "⚠️ Reminder from {$adminName}: Inquiry '{$inquiry->title}' (ID: #{$inquiry->inquiry_id}) requires your attention. Please review and take appropriate action.";
+            
+            $reminderMessage = !empty($customMessage) 
+                ? "⚠️ Reminder from {$adminName} regarding inquiry '{$inquiry->title}': {$customMessage}" 
+                : $defaultMessage;
+
+            // Get all agency staff members
+            $agencyUsers = \App\Models\User::where('agency_id', $agencyId)
+                ->where('user_role', 'agency')
+                ->get();
+
+            if ($agencyUsers->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No agency staff members found.'
+                ], 404);
+            }
+
+            // Send notification to all agency staff
+            foreach ($agencyUsers as $agencyUser) {
+                \App\Models\Module4\Notification::createNotification(
+                    $agencyUser->user_id,
+                    $inquiry->inquiry_id,
+                    $reminderMessage
+                );
+            }
+
+            // Log the reminder action in inquiry history
+            \App\Models\inquiry_history::create([
+                'inquiry_id' => $inquiry->inquiry_id,
+                'new_status' => $inquiry->status, // Keep current status
+                'user_id' => Auth::id(),
+                'timestamp' => now(),
+                'agency_id' => $agencyId,
+                'notes' => 'Admin sent reminder to agency: ' . ($customMessage ?: 'Default reminder')
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Reminder sent successfully to {$agency->agency_name} ({$agencyUsers->count()} staff member(s))."
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Send reminder error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send reminder: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

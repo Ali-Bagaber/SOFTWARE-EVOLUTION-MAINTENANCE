@@ -134,12 +134,33 @@ class InquiryController extends Controller
                 'remarks' => $request->remarks
             ]);
 
-            // Create notification for status change
+            // Create notification for the public user about status change
+            $actorName = Auth::user()->name ?? 'System Administrator';
             Notification::createNotification(
                 $inquiry->user_id,
                 $inquiry_id,
-                "Your inquiry status has been updated to {$newStatus}"
+                "📋 {$actorName} has updated your inquiry status to {$newStatus}"
             );
+
+            // Notify agency staff if the inquiry is assigned to an agency
+            $verificationProcess = \App\Models\Models_Module3\VerificationProcess::where('inquiry_id', $inquiry_id)
+                ->whereNotNull('staff_agency_id')
+                ->latest()
+                ->first();
+            
+            if ($verificationProcess && $verificationProcess->staff_agency_id) {
+                $agencyUsers = \App\Models\User::where('agency_id', $verificationProcess->staff_agency_id)
+                    ->where('user_role', 'agency')
+                    ->get();
+                
+                foreach ($agencyUsers as $agencyUser) {
+                    Notification::createNotification(
+                        $agencyUser->user_id,
+                        $inquiry_id,
+                        "Inquiry status updated by Admin to: {$newStatus}. Please review."
+                    );
+                }
+            }
         }
 
         return response()->json([
@@ -166,10 +187,11 @@ class InquiryController extends Controller
         ]);
 
         // Create notification for new inquiry submission
+        $userName = Auth::user()->name ?? 'User';
         Notification::createNotification(
             Auth::id(),
             $inquiry->inquiry_id,
-            'Your inquiry has been submitted.'
+            "✅ {$userName}, your inquiry has been successfully submitted and is under review."
         );
 
         return redirect()->route('module4.inquiry.show', ['inquiry_id' => $inquiry->inquiry_id])

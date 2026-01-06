@@ -313,6 +313,124 @@
             background: #2980b9;
         }
 
+        .btn-remind {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-remind:hover {
+            background: #e67e22;
+        }
+
+        .btn-remind:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #2c3e50;
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            font-weight: bold;
+            color: #7f8c8d;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
+
         /* Pagination */
         .pagination-wrapper {
             padding: 20px 30px;
@@ -420,6 +538,24 @@
                                         <button class="btn-action btn-view" onclick="viewInquiry('{{ $inquiry->inquiry_id }}')">
                                             👁️ View
                                         </button>
+                                        @php
+                                            // Check if inquiry is assigned to an agency
+                                            $assignedAgency = $inquiry->verificationProcesses()->first();
+                                            $isAssigned = $assignedAgency !== null;
+                                            
+                                            // Check if inquiry has been inactive for 3+ days
+                                            $lastActivity = $inquiry->updated_at ?? $inquiry->date_submitted;
+                                            $daysSinceActivity = $lastActivity->diffInDays(now());
+                                            $isInactive = $daysSinceActivity >= 3;
+                                            
+                                            // Button should be enabled if assigned and inactive
+                                            $canRemind = $isAssigned && $isInactive;
+                                        @endphp
+                                        <button 
+                                            class="btn-action btn-remind" 
+                                            onclick="openReminderModal('{{ $inquiry->inquiry_id }}', '{{ addslashes($inquiry->title) }}')">
+                                            {{ $canRemind ? '🔔' : '🔕' }} Remind
+                                        </button>
                                     </td>
                                 </tr>
                                 @empty
@@ -443,6 +579,35 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Reminder Modal -->
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 Send Reminder to Agency</h3>
+                <button class="close-btn" onclick="closeReminderModal()">&times;</button>
+            </div>
+            <form id="reminderForm" onsubmit="sendReminder(event)">
+                <input type="hidden" id="reminderInquiryId" name="inquiry_id">
+                <div class="form-group">
+                    <label>Inquiry:</label>
+                    <p id="reminderInquiryTitle" style="color: #666; margin-bottom: 15px;"></p>
+                </div>
+                <div class="form-group">
+                    <label for="reminderMessage">Reminder Message (Optional):</label>
+                    <textarea 
+                        id="reminderMessage" 
+                        name="message" 
+                        placeholder="Add a custom message or leave blank for default reminder..."
+                    ></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeReminderModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Reminder</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -472,5 +637,57 @@
                 });
             });
         });
+
+        // Reminder Modal Functions
+        function openReminderModal(inquiryId, inquiryTitle) {
+            document.getElementById('reminderInquiryId').value = inquiryId;
+            document.getElementById('reminderInquiryTitle').textContent = inquiryTitle;
+            document.getElementById('reminderMessage').value = '';
+            document.getElementById('reminderModal').style.display = 'block';
+        }
+
+        function closeReminderModal() {
+            document.getElementById('reminderModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('reminderModal');
+            if (event.target === modal) {
+                closeReminderModal();
+            }
+        }
+
+        function sendReminder(event) {
+            event.preventDefault();
+            
+            const inquiryId = document.getElementById('reminderInquiryId').value;
+            const message = document.getElementById('reminderMessage').value;
+            
+            // Send AJAX request
+            fetch(`{{ url('/admin/inquiries') }}/${inquiryId}/send-reminder`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeReminderModal();
+                    // Optionally reload the page to update button states
+                    // location.reload();
+                } else {
+                    alert('❌ ' + (data.message || 'Failed to send reminder'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ An error occurred while sending the reminder');
+            });
+        }
     </script>
 @endsection

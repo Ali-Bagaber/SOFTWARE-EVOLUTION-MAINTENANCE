@@ -424,6 +424,27 @@
                 @yield('page_title', 'Welcome Back!')
             </div>
             <div class="user-info">
+                <!-- Notification Bell Icon -->
+                @php
+                    $unreadCount = 0;
+                    if (auth()->check()) {
+                        try {
+                            $unreadCount = \App\Models\Module4\Notification::where('user_id', auth()->id())
+                                ->where('is_read', 0)
+                                ->count();
+                        } catch (\Exception $e) {
+                            $unreadCount = 0;
+                        }
+                    }
+                @endphp
+                <a href="{{ route('agency.notifications') }}" class="notification-link" title="Notifications" style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: #64748b; transition: all 0.2s ease; text-decoration: none; margin-right: 16px;">
+                    <i class="fas fa-bell" style="font-size: 20px;"></i>
+                    @if($unreadCount > 0)
+                        <span id="notificationBadge" class="notification-badge" style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 12px; height: 20px; min-width: 20px; display: flex; align-items: center; justify-content: center; border-radius: 10px; padding: 0 6px; font-weight: 600; border: 2px solid white;">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                    @else
+                        <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+                    @endif
+                </a>
                 <div class="user-details">
                     <h4>{{ isset($agency) ? $agency->name : (auth()->user()->name ?? 'Agency') }}</h4>
                     <span>Agency Administrator</span>
@@ -466,6 +487,46 @@
             card.addEventListener('mouseleave', function () {
                 this.style.transform = 'translateY(0)';
             });
+        });
+
+        // Notification count update function
+        function updateNotificationCount() {
+            fetch('/module4/notifications/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notificationBadge');
+                    
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.log('Notification count update failed:', error);
+                });
+        }
+
+        // Update notification count every minute
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNotificationCount();
+            setInterval(updateNotificationCount, 60000);
+        });
+
+        // Add hover effect for notification bell
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationLink = document.querySelector('.notification-link');
+            if (notificationLink) {
+                notificationLink.addEventListener('mouseenter', function() {
+                    this.style.background = '#f1f5f9';
+                    this.style.color = '#3b82f6';
+                });
+                notificationLink.addEventListener('mouseleave', function() {
+                    this.style.background = 'transparent';
+                    this.style.color = '#64748b';
+                });
+            }
         });
 </script>
 @yield('additional_scripts')

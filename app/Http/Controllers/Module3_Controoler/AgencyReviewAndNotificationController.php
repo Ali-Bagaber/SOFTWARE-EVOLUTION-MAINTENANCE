@@ -321,11 +321,14 @@ class AgencyReviewAndNotificationController extends Controller
 
             // Send notification for important status changes
             if (in_array($normalizedStatus, ['Verified as True', 'Identified as Fake', 'Rejected'])) {
+                $agencyStaffName = $user->name ?? 'Agency Staff';
+                $agencyName = $agency ? $agency->agency_name : 'the assigned agency';
+                
                 $notificationMessage = match ($normalizedStatus) {
-                    'Verified as True' => "Good news! Your inquiry '{$inquiry->title}' has been verified as TRUE. The information has been confirmed as genuine and accurate.",
-                    'Identified as Fake' => "Your inquiry '{$inquiry->title}' has been investigated and IDENTIFIED AS FAKE NEWS. The information has been determined to be false or misleading.",
-                    'Rejected' => "Your inquiry '{$inquiry->title}' has been REJECTED after investigation.",
-                    default => "Your inquiry '{$inquiry->title}' status has been updated to: {$normalizedStatus}"
+                    'Verified as True' => "✅ Good news! {$agencyStaffName} from {$agencyName} has verified your inquiry '{$inquiry->title}' as TRUE. The information has been confirmed as genuine and accurate.",
+                    'Identified as Fake' => "⚠️ {$agencyStaffName} from {$agencyName} has investigated your inquiry '{$inquiry->title}' and IDENTIFIED IT AS FAKE NEWS. The information has been determined to be false or misleading.",
+                    'Rejected' => "❌ {$agencyStaffName} from {$agencyName} has REJECTED your inquiry '{$inquiry->title}' after investigation.",
+                    default => "📝 {$agencyStaffName} from {$agencyName} has updated your inquiry '{$inquiry->title}' status to: {$normalizedStatus}"
                 };
 
                 \App\Models\Module4\Notification::createNotification(
@@ -520,10 +523,12 @@ class AgencyReviewAndNotificationController extends Controller
             ]);
 
             // Notify the user about the verification result
+            $agencyStaffName = $user->name ?? 'Agency Staff';
+            $agencyName = $agency->agency_name ?? 'the assigned agency';
             \App\Models\Module4\Notification::createNotification(
                 $inquiry->public_user_id,
                 $inquiry->inquiry_id,
-                "Good news! Your inquiry '{$inquiry->title}' has been verified as TRUE. The information has been confirmed as genuine and accurate."
+                "✅ Great news! {$agencyStaffName} from {$agencyName} has verified your inquiry '{$inquiry->title}' as TRUE. The information has been confirmed as genuine and accurate."
             );
 
             return response()->json([
@@ -622,11 +627,13 @@ class AgencyReviewAndNotificationController extends Controller
             ]);
 
             // Notify the user about the rejection result
+            $agencyStaffName = $user->name ?? 'Agency Staff';
+            $agencyName = $agency->agency_name ?? 'the assigned agency';
             $notificationMessage = '';
             if ($statusToSet === 'Identified as Fake') {
-                $notificationMessage = "Your inquiry '{$inquiry->title}' has been investigated and IDENTIFIED AS FAKE NEWS. The information has been determined to be false or misleading.";
+                $notificationMessage = "⚠️ {$agencyStaffName} from {$agencyName} has investigated your inquiry '{$inquiry->title}' and IDENTIFIED IT AS FAKE NEWS. The information has been determined to be false or misleading.";
             } else {
-                $notificationMessage = "Your inquiry '{$inquiry->title}' has been REJECTED after investigation. Reason: {$request->rejection_reason}";
+                $notificationMessage = "❌ {$agencyStaffName} from {$agencyName} has REJECTED your inquiry '{$inquiry->title}' after investigation. Reason: {$request->rejection_reason}";
             }
 
             \App\Models\Module4\Notification::createNotification(
@@ -723,11 +730,16 @@ class AgencyReviewAndNotificationController extends Controller
             $mcmcId = $verificationProcess->MCMC_ID;
             Log::debug('Found MCMC_ID:', ['mcmc_id' => $mcmcId, 'inquiry_id' => $request->inquiry_id]);
 
+            // Get agency staff name
+            $user = Auth::user();
+            $agencyStaffName = $user->name ?? 'Agency Staff';
+            $messageWithActor = "📩 {$agencyStaffName}: {$request->message}";
+
             // Create notification with MCMC_ID as user_id
             $notification = Notification::create([
                 'user_id'    => $mcmcId,  // Use MCMC_ID from verification_processes
                 'inquiry_id' => $request->inquiry_id,
-                'message'    => $request->message,
+                'message'    => $messageWithActor,
                 'date_sent'  => now(),
                 'is_read'    => false
             ]);
