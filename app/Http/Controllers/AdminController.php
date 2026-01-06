@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Agency;
@@ -84,7 +85,7 @@ class AdminController extends Controller
     public function dashboard()
     {
         $admin = Auth::user();
-        
+
         // Get real statistics from database
         $stats = [
             'total_users' => User::count(),
@@ -92,7 +93,7 @@ class AdminController extends Controller
             'pending_inquiries' => 0,
             'completed_inquiries' => 0,
         ];
-        
+
         // Try to get inquiry statistics if Inquiry model exists
         try {
             if (class_exists('\App\Models\Inquiry')) {
@@ -108,7 +109,7 @@ class AdminController extends Controller
             // Keep default values if there's any error
             Log::info('Error fetching inquiry statistics: ' . $e->getMessage());
         }
-        
+
         return view('AdminHomePage', compact('admin', 'stats'));
     }
 
@@ -161,16 +162,16 @@ class AdminController extends Controller
         if (!empty($filters['user_role']) && $filters['user_role'] !== 'all') {
             $usersQuery->where('user_role', $filters['user_role']);
         }
-        
+
         // Apply search filter if provided
         if (!empty($filters['search'])) {
             $search = $filters['search'];
-            $usersQuery->where(function($query) use ($search) {
+            $usersQuery->where(function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
-        
+
         // Check if this is a user profile report
         $isProfileReport = !empty($filters['report_type']) && $filters['report_type'] === 'user_profile';
 
@@ -299,7 +300,7 @@ class AdminController extends Controller
 
         return redirect()->route('admin.settings')->with('success', 'Profile updated successfully');
     }
-    
+
     public function exportToPDF(Request $request)
     {
         // Log incoming parameters for debugging
@@ -320,13 +321,13 @@ class AdminController extends Controller
         if ($request->input('user_role') && $request->input('user_role') !== 'all') {
             $usersQuery->where('user_role', $request->input('user_role'));
         }
-        
+
         // Apply search filter if provided
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $usersQuery->where(function($query) use ($search) {
+            $usersQuery->where(function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -380,13 +381,13 @@ class AdminController extends Controller
         $filename = $isProfileReport ? 'user_profiles_report.pdf' : 'users_report.pdf';
         return $pdf->download($filename);
     }
-    
+
     // Keep the original method for backward compatibility
     public function exportReportToPDF(Request $request)
     {
         return $this->exportToPDF($request);
     }
-    
+
     public function exportToExcel(Request $request)
     {
         // Log incoming parameters for debugging
@@ -412,9 +413,9 @@ class AdminController extends Controller
         // Apply search filter
         if ($request->input('search')) {
             $searchTerm = $request->input('search');
-            $usersQuery->where(function($query) use ($searchTerm) {
+            $usersQuery->where(function ($query) use ($searchTerm) {
                 $query->where('name', 'like', "%{$searchTerm}%")
-                      ->orWhere('email', 'like', "%{$searchTerm}%");
+                    ->orWhere('email', 'like', "%{$searchTerm}%");
             });
         }
 
@@ -426,7 +427,7 @@ class AdminController extends Controller
 
         // Set appropriate headers for Excel download
         $fileName = ($reportType === 'user_profile' ? 'user_profiles_report' : 'users_report') . '.xls';
-        
+
         return response($html)
             ->header('Content-Type', 'application/vnd.ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
@@ -810,7 +811,7 @@ class AdminController extends Controller
 
             // Check if inquiry is assigned to an agency
             $verificationProcess = $inquiry->verificationProcesses()->first();
-            
+
             if (!$verificationProcess) {
                 return response()->json([
                     'success' => false,
@@ -819,7 +820,7 @@ class AdminController extends Controller
             }
 
             $agencyId = $verificationProcess->staff_agency_id;
-            
+
             // Get agency details
             $agency = \App\Models\Agency::find($agencyId);
             if (!$agency) {
@@ -833,9 +834,9 @@ class AdminController extends Controller
             $adminName = Auth::user()->name ?? 'Administrator';
             $customMessage = $request->input('message', '');
             $defaultMessage = "⚠️ Reminder from {$adminName}: Inquiry '{$inquiry->title}' (ID: #{$inquiry->inquiry_id}) requires your attention. Please review and take appropriate action.";
-            
-            $reminderMessage = !empty($customMessage) 
-                ? "⚠️ Reminder from {$adminName} regarding inquiry '{$inquiry->title}': {$customMessage}" 
+
+            $reminderMessage = !empty($customMessage)
+                ? "⚠️ Reminder from {$adminName} regarding inquiry '{$inquiry->title}': {$customMessage}"
                 : $defaultMessage;
 
             // Get all agency staff members
@@ -873,7 +874,6 @@ class AdminController extends Controller
                 'success' => true,
                 'message' => "Reminder sent successfully to {$agency->agency_name} ({$agencyUsers->count()} staff member(s))."
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Send reminder error: ' . $e->getMessage());
             return response()->json([

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Module4;
+
 use App\Http\Controllers\Controller;
 use App\Models\Module4\Notification;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class NotificationController extends Controller
 
         // Check if user is authenticated
         if (!Auth::check()) {
-            
+
             return redirect()->route('login')->with('error', 'Please log in to view notifications.');
         }
 

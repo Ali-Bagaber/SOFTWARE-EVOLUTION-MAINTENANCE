@@ -29,9 +29,9 @@ class InquiryController extends Controller
         // Apply search filter
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('content', 'like', "%{$searchTerm}%");
+                    ->orWhere('content', 'like', "%{$searchTerm}%");
             });
         }
 
@@ -55,7 +55,7 @@ class InquiryController extends Controller
                     break;
                 case 'month':
                     $query->whereYear('created_at', $date->year)
-                          ->whereMonth('created_at', $date->month);
+                        ->whereMonth('created_at', $date->month);
                     break;
                 case 'year':
                     $query->whereYear('created_at', $date->year);
@@ -74,11 +74,11 @@ class InquiryController extends Controller
         // Get monthly data for trend chart
         $monthlyData = collect();
         $monthlyLabels = collect();
-        
+
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $monthlyLabels->push($date->format('M Y'));
-            
+
             $monthlyData->push(
                 Inquiry::whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
@@ -147,12 +147,12 @@ class InquiryController extends Controller
                 ->whereNotNull('staff_agency_id')
                 ->latest()
                 ->first();
-            
+
             if ($verificationProcess && $verificationProcess->staff_agency_id) {
                 $agencyUsers = \App\Models\User::where('agency_id', $verificationProcess->staff_agency_id)
                     ->where('user_role', 'agency')
                     ->get();
-                
+
                 foreach ($agencyUsers as $agencyUser) {
                     Notification::createNotification(
                         $agencyUser->user_id,
@@ -207,35 +207,35 @@ class InquiryController extends Controller
     {
         // Get all possible statuses
         $statuses = ['Pending', 'Under Investigation', 'Verified as True', 'Identified as Fake', 'Rejected'];
-        
+
         // Count inquiries by status
         $statusCounts = [];
         foreach ($statuses as $status) {
             $statusCounts[$status] = Inquiry::where('status', $status)->count();
         }
-        
+
         // Get recent inquiries
         $recentInquiries = Inquiry::orderBy('date_submitted', 'desc')
             ->take(10)
             ->get();
-            
+
         // Generate monthly trends data for the last 6 months
         $monthlyTrends = [];
         $monthlyLabels = [];
-        
+
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
             $monthLabel = $date->format('M Y'); // e.g., "Jun 2023"
             $monthlyLabels[] = $monthLabel;
-            
+
             // Count inquiries for this month
             $count = Inquiry::whereYear('date_submitted', $date->year)
                 ->whereMonth('date_submitted', $date->month)
                 ->count();
-                
+
             $monthlyTrends[] = $count;
         }
-            
+
         return view('module_4.MCMC_Admin.dashboard', [
             'statuses' => $statuses,
             'statusCounts' => $statusCounts,

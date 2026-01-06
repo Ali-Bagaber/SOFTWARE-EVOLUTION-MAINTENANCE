@@ -323,7 +323,7 @@ class AgencyReviewAndNotificationController extends Controller
             if (in_array($normalizedStatus, ['Verified as True', 'Identified as Fake', 'Rejected'])) {
                 $agencyStaffName = $user->name ?? 'Agency Staff';
                 $agencyName = $agency ? $agency->agency_name : 'the assigned agency';
-                
+
                 $notificationMessage = match ($normalizedStatus) {
                     'Verified as True' => "✅ Good news! {$agencyStaffName} from {$agencyName} has verified your inquiry '{$inquiry->title}' as TRUE. The information has been confirmed as genuine and accurate.",
                     'Identified as Fake' => "⚠️ {$agencyStaffName} from {$agencyName} has investigated your inquiry '{$inquiry->title}' and IDENTIFIED IT AS FAKE NEWS. The information has been determined to be false or misleading.",

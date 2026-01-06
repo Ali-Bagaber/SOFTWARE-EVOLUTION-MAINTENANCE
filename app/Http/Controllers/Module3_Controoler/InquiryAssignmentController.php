@@ -29,7 +29,7 @@ class InquiryAssignmentController extends Controller
             if (class_exists('App\Models\Inquiry')) {
                 $userInquiries = Inquiry::where('public_user_id', $user->user_id)
                     ->with([
-                        'verificationProcesses' => function($query) {
+                        'verificationProcesses' => function ($query) {
                             $query->with('agency');
                         },
                         'user'
@@ -69,14 +69,14 @@ class InquiryAssignmentController extends Controller
                 // Get the user's inquiries with verification processes and agencies
                 $userInquiries = \App\Models\Inquiry::where('public_user_id', $user->user_id)
                     ->with([
-                        'verificationProcesses' => function($query) {
+                        'verificationProcesses' => function ($query) {
                             $query->with('agency');
                         }
                     ])
                     ->get();
 
                 // Extract unique agencies from verification processes
-                $agencyIds = $userInquiries->flatMap(function($inquiry) {
+                $agencyIds = $userInquiries->flatMap(function ($inquiry) {
                     return $inquiry->verificationProcesses->pluck('staff_agency_id');
                 })->unique()->filter()->toArray();
 
@@ -337,7 +337,7 @@ class InquiryAssignmentController extends Controller
                 $agencyUsers = \App\Models\User::where('agency_id', $request->agency_id)
                     ->where('user_role', 'agency')
                     ->get();
-                
+
                 foreach ($agencyUsers as $agencyUser) {
                     $agencyNotificationMessage = "🔔 {$adminName} assigned new inquiry '{$inquiry->title}' to your agency for investigation. Priority: {$request->priority}.";
                     \App\Models\Module4\Notification::createNotification(
