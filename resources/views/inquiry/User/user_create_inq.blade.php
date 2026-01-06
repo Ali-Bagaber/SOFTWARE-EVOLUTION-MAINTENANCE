@@ -3,6 +3,7 @@
 @section('title', 'Submit New Inquiry - Inquira')
 
 @section('additional_css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
 
         
@@ -294,26 +295,6 @@
                 </div>
 
                 <div class="form-body">
-                    @if(session('success'))
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    @if($errors->any())
-                        <div class="alert alert-error">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <div>
-                                <strong>Please correct the following errors:</strong>
-                                <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                    @endif
 
                     <form method="POST" action="{{ route('inquiry.store') }}" enctype="multipart/form-data">
                         @csrf
@@ -399,7 +380,41 @@
                 </div>
             </div>
         </section>
-    </main>    <script>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Show success or error messages as popups
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK'
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '{{ session('error') }}',
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Try Again'
+            });
+        @endif
+
+        @if($errors->any())
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error!',
+                html: '<strong>Please correct the following:</strong><br><ul style="text-align: left; margin-top: 10px;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>',
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'OK'
+            });
+        @endif
+
         // File upload feedback
         document.getElementById('media_attachment').addEventListener('change', function(e) {
             const label = document.querySelector('.file-label');
@@ -428,25 +443,45 @@
 
             if (!title.trim()) {
                 e.preventDefault();
-                alert('Please enter an inquiry title before submitting.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Title',
+                    text: 'Please enter an inquiry title before submitting.',
+                    confirmButtonColor: '#f59e0b'
+                });
                 return false;
             }
 
             if (!category) {
                 e.preventDefault();
-                alert('Please select a category for your inquiry.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Category',
+                    text: 'Please select a category for your inquiry.',
+                    confirmButtonColor: '#f59e0b'
+                });
                 return false;
             }
 
             if (!content.trim()) {
                 e.preventDefault();
-                alert('Please provide a detailed description of your inquiry.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Description',
+                    text: 'Please provide a detailed description of your inquiry.',
+                    confirmButtonColor: '#f59e0b'
+                });
                 return false;
             }
 
             if (!mediaAttachment) {
                 e.preventDefault();
-                alert('Please upload a media attachment to support your inquiry.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Attachment',
+                    text: 'Please upload a media attachment to support your inquiry.',
+                    confirmButtonColor: '#f59e0b'
+                });
                 return false;
             }
 

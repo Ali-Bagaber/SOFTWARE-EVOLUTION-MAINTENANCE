@@ -28,10 +28,10 @@ class InquiryController extends Controller
         // Validate the form data
         $validated = $request->validate([
             'title' => 'required|string|max:150',
-            'content' => 'nullable|string',
-            'category' => 'nullable|string|max:50',
+            'content' => 'required|string',
+            'category' => 'required|string|max:50',
             'evidence_url' => 'nullable|url',
-            'media_attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:10240' // 10MB max
+            'media_attachment' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:10240' // 10MB max
         ]);
 
         try {
@@ -64,14 +64,15 @@ class InquiryController extends Controller
                 'title' => $inquiry->title
             ]);
 
-            // Log status history
-            $history = new inquiry_history();
-            $history->inquiry_id = $inquiry->inquiry_id;
-            $history->new_status = 'Pending';
-            $history->user_id = $userId;
-            $history->timestamp = now();
-            $history->agency_id = 1; // Use existing agency ID
-            $history->save();
+            // Log status history - only if inquiry has been assigned to an agency
+            // For now, skip history creation until agency assignment
+            // $history = new inquiry_history();
+            // $history->inquiry_id = $inquiry->inquiry_id;
+            // $history->new_status = 'Pending';
+            // $history->user_id = $userId;
+            // $history->timestamp = now();
+            // $history->agency_id = null;
+            // $history->save();
 
             \Log::info('Creating notification for new inquiry', [
                 'user_id' => $userId,
@@ -125,6 +126,11 @@ class InquiryController extends Controller
                 $q->where('title', 'LIKE', "%{$searchTerm}%")
                   ->orWhere('content', 'LIKE', "%{$searchTerm}%");
             });
+        }
+        
+        // Category filter
+        if ($request->filled('category') && $request->input('category') !== 'all') {
+            $query->where('category', $request->input('category'));
         }
         
         // Status filter

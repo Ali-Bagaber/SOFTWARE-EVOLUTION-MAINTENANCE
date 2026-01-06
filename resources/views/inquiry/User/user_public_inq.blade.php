@@ -490,6 +490,21 @@
                 </div>
                 
                 <div class="filter-field">
+                    <label for="category">Category</label>
+                    <select name="category" id="category" class="filter-select">
+                        <option value="all">All Categories</option>
+                        <option value="Health-Related News" {{ request('category') == 'Health-Related News' ? 'selected' : '' }}>Health-Related News</option>
+                        <option value="Government & Policy News" {{ request('category') == 'Government & Policy News' ? 'selected' : '' }}>Government & Policy News</option>
+                        <option value="Crime & Safety Alerts" {{ request('category') == 'Crime & Safety Alerts' ? 'selected' : '' }}>Crime & Safety Alerts</option>
+                        <option value="Natural Disasters & Weather" {{ request('category') == 'Natural Disasters & Weather' ? 'selected' : '' }}>Natural Disasters & Weather</option>
+                        <option value="Economic & Financial News" {{ request('category') == 'Economic & Financial News' ? 'selected' : '' }}>Economic & Financial News</option>
+                        <option value="Social Issues & Viral Content" {{ request('category') == 'Social Issues & Viral Content' ? 'selected' : '' }}>Social Issues & Viral Content</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="search-row">
+                <div class="filter-field">
                     <label for="status">Status</label>
                     <select name="status" id="status" class="filter-select">
                         <option value="all">All Statuses</option>
