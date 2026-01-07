@@ -491,10 +491,7 @@ class AgencyReviewAndNotificationController extends Controller
                     ->exists();
             }
             if (!$hasAccess) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have permission to accept this inquiry.'
-                ], 403);
+                return redirect()->back()->with('error', 'You do not have permission to accept this inquiry.');
             }
 
             // Update inquiry status only
@@ -531,16 +528,9 @@ class AgencyReviewAndNotificationController extends Controller
                 "✅ Great news! {$agencyStaffName} from {$agencyName} has verified your inquiry '{$inquiry->title}' as TRUE. The information has been confirmed as genuine and accurate."
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Inquiry has been accepted successfully.',
-                'new_status' => 'Verified as True'
-            ]);
+            return redirect()->back()->with('success', 'Inquiry has been accepted successfully and marked as "Verified as True".');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to accept inquiry: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()->with('error', 'Failed to accept inquiry: ' . $e->getMessage());
         }
     }
 
