@@ -223,6 +223,132 @@
             color: #764ba2;
         }
 
+        .password-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #95a5a6;
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        .password-strength-container {
+            margin-top: 10px;
+        }
+
+        .password-strength-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .password-strength-text {
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .password-strength-value {
+            font-weight: 700;
+        }
+
+        .password-strength-value.weak {
+            color: #e74c3c;
+        }
+
+        .password-strength-value.medium {
+            color: #f39c12;
+        }
+
+        .password-strength-value.strong {
+            color: #27ae60;
+        }
+
+        .password-strength-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .password-strength-progress {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .password-strength-progress.weak {
+            width: 33%;
+            background-color: #e74c3c;
+        }
+
+        .password-strength-progress.medium {
+            width: 66%;
+            background-color: #f39c12;
+        }
+
+        .password-strength-progress.strong {
+            width: 100%;
+            background-color: #27ae60;
+        }
+
+        .password-requirements {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .password-requirements-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #1976d2;
+            font-size: 14px;
+        }
+
+        .password-requirements-header i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .password-requirements ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        .password-requirements li {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 13px;
+            color: #34495e;
+        }
+
+        .password-requirements li i {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+
+        .password-requirements li.valid {
+            color: #27ae60;
+        }
+
+        .password-requirements li.invalid {
+            color: #7f8c8d;
+        }
+
         @media (max-width: 480px) {
             .container {
                 margin: 20px;
@@ -278,6 +404,44 @@
                 <div class="input-wrapper">
                     <input type="password" class="form-input" id="new_password" name="new_password" required autocomplete="new-password">
                     <i class="fas fa-key input-icon"></i>
+                    <i class="fas fa-eye password-toggle" id="toggleNewPassword"></i>
+                </div>
+                <div class="password-strength-container" id="passwordStrengthContainer" style="display: none;">
+                    <div class="password-strength-label">
+                        <span class="password-strength-text">Password Strength:</span>
+                        <span class="password-strength-value" id="passwordStrengthText">Weak</span>
+                    </div>
+                    <div class="password-strength-bar">
+                        <div class="password-strength-progress weak" id="passwordStrengthProgress"></div>
+                    </div>
+                </div>
+                <div class="password-requirements">
+                    <div class="password-requirements-header">
+                        <i class="fas fa-info-circle"></i>
+                        Password Requirements
+                    </div>
+                    <ul>
+                        <li id="req-length" class="invalid">
+                            <i class="fas fa-circle"></i>
+                            Minimum 8 characters
+                        </li>
+                        <li id="req-uppercase" class="invalid">
+                            <i class="fas fa-circle"></i>
+                            At least one uppercase letter
+                        </li>
+                        <li id="req-lowercase" class="invalid">
+                            <i class="fas fa-circle"></i>
+                            At least one lowercase letter
+                        </li>
+                        <li id="req-number" class="invalid">
+                            <i class="fas fa-circle"></i>
+                            At least one number
+                        </li>
+                        <li id="req-special" class="invalid">
+                            <i class="fas fa-circle"></i>
+                            At least one special character (@$!%*?&)
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -286,6 +450,7 @@
                 <div class="input-wrapper">
                     <input type="password" class="form-input" id="new_password_confirmation" name="new_password_confirmation" required autocomplete="new-password">
                     <i class="fas fa-shield-alt input-icon"></i>
+                    <i class="fas fa-eye password-toggle" id="toggleConfirmPassword"></i>
                 </div>
             </div>
 
@@ -302,5 +467,105 @@
             </a>
         </div>
     </div>
+
+    <script>
+        // Password Strength Checker
+        const newPasswordInput = document.getElementById('new_password');
+        const passwordStrengthContainer = document.getElementById('passwordStrengthContainer');
+        const passwordStrengthText = document.getElementById('passwordStrengthText');
+        const passwordStrengthProgress = document.getElementById('passwordStrengthProgress');
+
+        // Requirement elements
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial = document.getElementById('req-special');
+
+        newPasswordInput.addEventListener('input', function() {
+            const password = this.value;
+            
+            if (password.length === 0) {
+                passwordStrengthContainer.style.display = 'none';
+                return;
+            }
+
+            passwordStrengthContainer.style.display = 'block';
+
+            // Check requirements
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[@$!%*?&]/.test(password);
+
+            // Update requirement indicators
+            updateRequirement(reqLength, hasLength);
+            updateRequirement(reqUppercase, hasUppercase);
+            updateRequirement(reqLowercase, hasLowercase);
+            updateRequirement(reqNumber, hasNumber);
+            updateRequirement(reqSpecial, hasSpecial);
+
+            // Calculate strength
+            let strength = 0;
+            if (hasLength) strength++;
+            if (hasUppercase) strength++;
+            if (hasLowercase) strength++;
+            if (hasNumber) strength++;
+            if (hasSpecial) strength++;
+
+            // Update strength indicator
+            if (strength <= 2) {
+                passwordStrengthText.textContent = 'Weak';
+                passwordStrengthText.className = 'password-strength-value weak';
+                passwordStrengthProgress.className = 'password-strength-progress weak';
+            } else if (strength <= 4) {
+                passwordStrengthText.textContent = 'Medium';
+                passwordStrengthText.className = 'password-strength-value medium';
+                passwordStrengthProgress.className = 'password-strength-progress medium';
+            } else {
+                passwordStrengthText.textContent = 'Strong';
+                passwordStrengthText.className = 'password-strength-value strong';
+                passwordStrengthProgress.className = 'password-strength-progress strong';
+            }
+        });
+
+        function updateRequirement(element, isValid) {
+            if (isValid) {
+                element.classList.remove('invalid');
+                element.classList.add('valid');
+                element.querySelector('i').className = 'fas fa-check-circle';
+            } else {
+                element.classList.remove('valid');
+                element.classList.add('invalid');
+                element.querySelector('i').className = 'fas fa-circle';
+            }
+        }
+
+        // Toggle password visibility
+        const toggleNewPassword = document.getElementById('toggleNewPassword');
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+        toggleNewPassword.addEventListener('click', function() {
+            togglePasswordVisibility(newPasswordInput, this);
+        });
+
+        toggleConfirmPassword.addEventListener('click', function() {
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            togglePasswordVisibility(confirmPasswordInput, this);
+        });
+
+        function togglePasswordVisibility(input, icon) {
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>
