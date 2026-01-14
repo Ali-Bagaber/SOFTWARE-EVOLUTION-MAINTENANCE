@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Login - Inquira</title>
+    @if(config('recaptcha.enabled') && config('recaptcha.site_key'))
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
     <style>
         * {
             margin: 0;
@@ -276,7 +279,13 @@
                 </div>
             </div>
 
-            <button class="login-btn" type="submit">Sign In</button>
+            @if(config('recaptcha.enabled') && config('recaptcha.site_key'))
+            <div style="display: flex; justify-content: center; margin: 20px 0;">
+                <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+            </div>
+            @endif
+
+            <button class="login-btn" type="submit" id="loginBtn">Sign In</button>
             <input type="hidden" name="is_admin_login" id="is_admin_login" value="0">
 
             <div class="form-links">
@@ -335,9 +344,19 @@
             }
         });
 
-        // Add loading state to button
-        document.getElementById('loginForm').addEventListener('submit', function() {
-            const button = document.querySelector('.login-btn');
+        // Add loading state to button with reCAPTCHA check
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            @if(config('recaptcha.enabled') && config('recaptcha.site_key'))
+            // Check if reCAPTCHA is completed
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                e.preventDefault();
+                alert('🔒 Please complete the reCAPTCHA verification before signing in.');
+                return false;
+            }
+            @endif
+            
+            const button = document.getElementById('loginBtn');
             button.textContent = 'Signing In...';
             button.disabled = true;
         });

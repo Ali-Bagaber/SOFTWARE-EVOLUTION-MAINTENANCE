@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use App\Models\Agency;
 
@@ -27,6 +28,17 @@ class UserController extends Controller
     public function login(Request $request)
     {
         Log::info('Login attempt', ['email' => $request->email]);
+        
+        // Verify reCAPTCHA if enabled
+        if (config('recaptcha.enabled')) {
+            $recaptchaToken = $request->input('g-recaptcha-response');
+            
+            if (!$this->verifyRecaptcha($recaptchaToken)) {
+                return back()
+                    ->withInput()
+                    ->with('error', '🔒 Security verification failed. Please complete the reCAPTCHA and try again.');
+            }
+        }
         
         $request->validate([
             'email' => 'required|email',
@@ -291,11 +303,34 @@ class UserController extends Controller
     }
     public function registerPublic(Request $request)
     {
+        // Verify reCAPTCHA if enabled
+        if (config('recaptcha.enabled')) {
+            $recaptchaToken = $request->input('g-recaptcha-response');
+            
+            if (!$this->verifyRecaptcha($recaptchaToken)) {
+                return back()
+                    ->withInput()
+                    ->with('error', '🤖 Security verification failed. Please try again or contact support if this persists.');
+            }
+        }
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'contact_number' => 'required|string|max:20',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/',      // at least one lowercase letter
+                'regex:/[A-Z]/',      // at least one uppercase letter
+                'regex:/[0-9]/',      // at least one number
+                'regex:/[@$!%*?&]/',  // at least one special character
+            ],
+        ], [
+            'password.min' => 'Password must be at least 8 characters long.',
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).',
         ]);
 
         $user = new User();
@@ -315,7 +350,51 @@ class UserController extends Controller
         Auth::login($user);
         // Always redirect to the dashboard route for public users
         return redirect()->route('publicuser.dashboard')->with('success', "🎉 Welcome to Inquira, {$user->name}! Your account has been created successfully and you're now logged in.");
-    }    // Show agency password update form
+    }
+
+    /**
+     * Verify Google reCAPTCHA v2 token
+     */
+    private function verifyRecaptcha($token)
+    {
+        if (empty($token)) {
+            Log::warning('reCAPTCHA: Empty token received');
+            return false;
+        }
+
+        $secretKey = config('recaptcha.secret_key');
+        
+        if (empty($secretKey)) {
+            Log::error('reCAPTCHA: Secret key not configured');
+            return true; // Allow if not configured
+        }
+
+        try {
+            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $secretKey,
+                'response' => $token,
+                'remoteip' => request()->ip()
+            ]);
+
+            $result = $response->json();
+            
+            Log::info('reCAPTCHA verification result', [
+                'success' => $result['success'] ?? false,
+                'hostname' => $result['hostname'] ?? 'unknown'
+            ]);
+
+            // For reCAPTCHA v2, just check success
+            return isset($result['success']) && $result['success'] === true;
+            
+        } catch (\Exception $e) {
+            Log::error('reCAPTCHA: Verification error', [
+                'message' => $e->getMessage()
+            ]);
+            return true; // Allow if verification service fails
+        }
+    }
+
+    // Show agency password update form
     public function showAgencyPasswordUpdateForm()
     {
         $user = Auth::user();

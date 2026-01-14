@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - MCMC</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    @if(config('recaptcha.enabled') && config('recaptcha.site_key'))
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
     <style>
         * {
             margin: 0;
@@ -179,6 +182,115 @@
             border: 1px solid #81e6d9;
         }
 
+        .password-strength-wrapper {
+            margin-top: 8px;
+        }
+
+        .password-strength-label {
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .password-strength-label span {
+            font-weight: 700;
+        }
+
+        .password-strength-label.weak span {
+            color: #e53e3e;
+        }
+
+        .password-strength-label.medium span {
+            color: #ed8936;
+        }
+
+        .password-strength-label.strong span {
+            color: #38a169;
+        }
+
+        .password-strength-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .password-strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .password-strength-fill.weak {
+            width: 33%;
+            background: #e53e3e;
+        }
+
+        .password-strength-fill.medium {
+            width: 66%;
+            background: #ed8936;
+        }
+
+        .password-strength-fill.strong {
+            width: 100%;
+            background: #38a169;
+        }
+
+        .password-requirements {
+            background: #edf2f7;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-top: 10px;
+            border-left: 3px solid #4299e1;
+        }
+
+        .password-requirements-title {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .password-requirements-title i {
+            color: #4299e1;
+            margin-right: 6px;
+        }
+
+        .password-requirements ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .password-requirements li {
+            font-size: 12px;
+            color: #718096;
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-requirements li::before {
+            content: '•';
+            color: #a0aec0;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .password-requirements li.valid {
+            color: #38a169;
+        }
+
+        .password-requirements li.valid::before {
+            content: '✓';
+            color: #38a169;
+        }
+
         @media (max-width: 480px) {
             .register-container {
                 padding: 30px 20px;
@@ -250,10 +362,31 @@
                 <label for="password">Password</label>
                 <div class="password-wrapper">
                     <input type="password" name="password" id="password" class="form-input" 
-                           placeholder="Enter your password (minimum 6 characters)" required>
+                           placeholder="Enter your password" required>
                     <span class="password-toggle" onclick="togglePassword('password')">
                         <i class="fas fa-eye"></i>
                     </span>
+                </div>
+                <div class="password-strength-wrapper">
+                    <div class="password-strength-label" id="strengthLabel">
+                        Password Strength: <span id="strengthText">-</span>
+                    </div>
+                    <div class="password-strength-bar">
+                        <div class="password-strength-fill" id="strengthBar"></div>
+                    </div>
+                </div>
+                <div class="password-requirements">
+                    <div class="password-requirements-title">
+                        <i class="fas fa-info-circle"></i>
+                        Password Requirements
+                    </div>
+                    <ul>
+                        <li id="req-length">Minimum 8 characters</li>
+                        <li id="req-uppercase">At least one uppercase letter</li>
+                        <li id="req-lowercase">At least one lowercase letter</li>
+                        <li id="req-number">At least one number</li>
+                        <li id="req-special">At least one special character (@$!%*?&)</li>
+                    </ul>
                 </div>
             </div>
 
@@ -268,7 +401,13 @@
                 </div>
             </div>
 
-            <button type="submit" class="register-btn">
+            @if(config('recaptcha.enabled') && config('recaptcha.site_key'))
+            <div class="form-group" style="display: flex; justify-content: center; margin: 25px 0;">
+                <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+            </div>
+            @endif
+
+            <button type="submit" class="register-btn" id="submitBtn">
                 <i class="fas fa-user-plus"></i> Create Account
             </button>
 
@@ -323,7 +462,52 @@
             }
         });
 
-        // Form validation
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthLabel = document.getElementById('strengthLabel');
+            const strengthText = document.getElementById('strengthText');
+            
+            // Check requirements
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[@$!%*?&]/.test(password);
+            
+            // Update requirement indicators
+            document.getElementById('req-length').className = hasLength ? 'valid' : '';
+            document.getElementById('req-uppercase').className = hasUppercase ? 'valid' : '';
+            document.getElementById('req-lowercase').className = hasLowercase ? 'valid' : '';
+            document.getElementById('req-number').className = hasNumber ? 'valid' : '';
+            document.getElementById('req-special').className = hasSpecial ? 'valid' : '';
+            
+            // Calculate strength
+            const requirementsMet = [hasLength, hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
+            
+            // Remove all strength classes
+            strengthBar.className = 'password-strength-fill';
+            strengthLabel.className = 'password-strength-label';
+            
+            if (password.length === 0) {
+                strengthText.textContent = '-';
+            } else if (requirementsMet <= 2) {
+                strengthBar.classList.add('weak');
+                strengthLabel.classList.add('weak');
+                strengthText.textContent = 'Weak';
+            } else if (requirementsMet <= 4) {
+                strengthBar.classList.add('medium');
+                strengthLabel.classList.add('medium');
+                strengthText.textContent = 'Medium';
+            } else {
+                strengthBar.classList.add('strong');
+                strengthLabel.classList.add('strong');
+                strengthText.textContent = 'Strong';
+            }
+        });
+
+        // Form validation with reCAPTCHA v2
         document.querySelector('form').addEventListener('submit', function(e) {
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('password_confirmation').value;
@@ -334,11 +518,33 @@
                 return false;
             }
             
-            if (password.length < 6) {
+            // Check all password requirements
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[@$!%*?&]/.test(password);
+            
+            if (!hasLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
                 e.preventDefault();
-                alert('Password must be at least 6 characters long.');
+                alert('Password must meet all requirements:\n• Minimum 8 characters\n• At least one uppercase letter\n• At least one lowercase letter\n• At least one number\n• At least one special character (@$!%*?&)');
                 return false;
             }
+            
+            @if(config('recaptcha.enabled') && config('recaptcha.site_key'))
+            // Check if reCAPTCHA is completed
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                e.preventDefault();
+                alert('🔒 Please complete the reCAPTCHA verification.');
+                return false;
+            }
+            @endif
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
         });
     </script>
 </body>
